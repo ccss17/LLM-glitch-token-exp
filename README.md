@@ -1,6 +1,6 @@
 - based on [What GPT-oss Leaks About OpenAI's Training Data](https://fi-le.net/oss/)
 
-# LLM-Reversing: Glitch Token Analysis for LLM Training Data 
+# LLM glitch token experiment: Glitch Token Analysis for LLM Training Data 
 
 This project analyzes **glitch tokens** in  Large Language Models to reverse-engineer their training data sources by examining embedding vector norms.
 
