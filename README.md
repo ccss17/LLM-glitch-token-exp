@@ -8,22 +8,6 @@ This project analyzes **glitch tokens** in  Large Language Models to reverse-eng
 
 **Glitch tokens** are tokens that exist in a model's vocabulary but were never encountered during training. Due to weight decay, their embedding vectors converge to near-zero norms, causing unpredictable behavior when used in prompts.
 
-This research builds on Jessica Rumbelow's groundbreaking work on GPT models, where tokens like "SolidGoldMagicarp" were found to trigger hallucinations and language switching. I extend this analysis to Korea open weight LLMs
-
-## Technical Principles
-
-The core insight is that **unused tokens converge to zero norm** due to weight decay during training. In 4096-dimensional embedding space:
-
-- **Normal tokens**: $\|e\| ≈ 140 ± 20$ (hypersphere surface)
-- **Glitch tokens**: $\|e\| < 5$ (near origin)
-- **Distance**: d(normal, glitch) ≥ 138 (clearly separated)
-
-Self-Attention Impact - Glitch tokens cause attention mechanism failures:
-
-- Input: $[e_1, e_2, e_{\text{glitch}}, e_3, ...]$ where $\|e_{\text{glitch}}\| ≈ 2 < 140$
-
-Result: Attention weights become uniform / Information loss in context / Hallucination triggers
-
 
 # How to prevent
 
