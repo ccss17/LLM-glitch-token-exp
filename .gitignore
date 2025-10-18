@@ -1,0 +1,75 @@
+# pixi environments
+.pixi/*
+!.pixi/config.toml
+
+# Python
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+lib/
+lib64/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Virtual Environment
+venv/
+ENV/
+env/
+
+# Jupyter Notebook
+.ipynb_checkpoints
+# *.ipynb
+
+# Model files (너무 커서 git에 올리지 않음)
+*.bin
+*.safetensors
+*.pt
+*.pth
+
+# Results (크거나 민감한 데이터)
+results/*.npy
+results/*.npz
+results/embeddings/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+logs/
+
+# Temporary files
+*.tmp
+.cache/
+
+src/llm_reversing/attack/README.md
+src/llm_reversing/chase/README.md
+design.md
+example.md
+principle.md
+.env
+REPORT.md
+RESULTS.md
+*.bak
+tmp/
