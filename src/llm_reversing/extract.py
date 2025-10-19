@@ -93,7 +93,7 @@ class EmbeddingExtractor:
         """Calculate L2 Norm"""
         print("\nCalculating L2 norms...")
 
-        # L2 norm = √(Σ xᵢ²)
+        # L2 norm
         self.norms = np.linalg.norm(self.embeddings, axis=1)
 
         print("Norms calculated!")
