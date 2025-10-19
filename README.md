@@ -10,9 +10,7 @@ This project analyzes **glitch tokens** in  Large Language Models to reverse-eng
 
 # Assumption
 
-Glitch tokens are tokens that exist in a model's vocabulary but were never encountered during the training process, causing their embedding vector norms to converge to zero due to weight decay. [What GPT-oss Leaks About OpenAI's Training Data](https://fi-le.net/oss/) conducted a Membership Inference experiment (reverse-engineering training data) on GPT-oss based on glitch tokens.
-
-Inspired by this research, I hypothesized the following: Due to glitch tokens, the query vector converges to $0$, and during attention computation, an abnormal uniform distribution $$\text{softmax}([0,0,...,0]) = [1/n, ..., 1/n]$$ is generated. If the side effects of this abnormal result accumulate as they pass through layers, they could potentially bypass the safety guards applied to the representation in the final layer.
+[What GPT-oss Leaks About OpenAI's Training Data](https://fi-le.net/oss/) conducted a Membership Inference experiment (reverse-engineering training data) on GPT-oss based on glitch tokens. Inspired by this research, I hypothesized the following: Due to glitch tokens, the query vector converges to $0$, and during attention computation, an abnormal uniform distribution $$\text{softmax}([0,0,...,0]) = [1/n, ..., 1/n]$$ is generated. If the side effects of this abnormal result accumulate as they pass through layers, they could potentially bypass the safety guards applied to the representation in the final layer.
 
 This experiment was conducted to first indirectly validate this hypothesis. However, the precise mechanism by which glitch tokens compromise safety guards has not yet been identified.
 
