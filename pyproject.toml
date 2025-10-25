@@ -43,17 +43,17 @@ glitch_tokens_kanana_safeguard_8b = "python src/llm_reversing/glitch_tokens.py -
 glitch_tokens_exaone_3_5_32b = "python src/llm_reversing/glitch_tokens.py --model LGAI-EXAONE/EXAONE-3.5-32B-Instruct  --num_low 20 --num_high 20"
 glitch_tokens_solar_instruct_v1_0 = "python src/llm_reversing/glitch_tokens.py --model upstage/SOLAR-10.7B-Instruct-v1.0  --num_low 20 --num_high 20"
 
-inject_hyperclovax = "python src/llm_reversing/inject.py --model naver-hyperclovax/HyperCLOVAX-SEED-Vision-Instruct-3B  --num_tokens 20"
-inject_exaone_3_0 = "python src/llm_reversing/inject.py --model LGAI-EXAONE/EXAONE-3.0-7.8B-Instruct  --num_tokens 20"
-inject_exaone_4_0_1_32b = "python src/llm_reversing/inject.py --model LGAI-EXAONE/EXAONE-4.0.1-32B  --num_tokens 20"
-inject_hyperclovax_think = "python src/llm_reversing/inject.py --model naver-hyperclovax/HyperCLOVAX-SEED-Think-14B  --num_tokens 20"
-inject_kullm3 = "python src/llm_reversing/inject.py --model nlpai-lab/KULLM3  --num_tokens 20"
-inject_kanana_base = "python src/llm_reversing/inject.py --model kakaocorp/kanana-1.5-8b-base  --num_tokens 20"
-inject_solar = "python src/llm_reversing/inject.py --model upstage/SOLAR-10.7B-v1.0  --num_tokens 20"
-inject_kanana_a3b = "python src/llm_reversing/inject.py --model kakaocorp/kanana-1.5-15.7b-a3b-instruct  --num_tokens 20"
-inject_kanana_safeguard_8b = "python src/llm_reversing/inject.py --model kakaocorp/kanana-safeguard-8b  --num_tokens 20"
-inject_exaone_3_5_32b = "python src/llm_reversing/inject.py --model LGAI-EXAONE/EXAONE-3.5-32B-Instruct  --num_tokens 20"
-inject_solar_instruct_v1_0 = "python src/llm_reversing/inject.py --model upstage/SOLAR-10.7B-Instruct-v1.0  --num_tokens 20"
+inject_hyperclovax = "python src/llm_reversing/inject.py --model naver-hyperclovax/HyperCLOVAX-SEED-Vision-Instruct-3B  --num_lower_tokens 20 --num_upper_tokens 20"
+inject_exaone_3_0 = "python src/llm_reversing/inject.py --model LGAI-EXAONE/EXAONE-3.0-7.8B-Instruct  --num_lower_tokens 20 --num_upper_tokens 20"
+inject_exaone_4_0_1_32b = "python src/llm_reversing/inject.py --model LGAI-EXAONE/EXAONE-4.0.1-32B  --num_lower_tokens 20 --num_upper_tokens 20"
+inject_hyperclovax_think = "python src/llm_reversing/inject.py --model naver-hyperclovax/HyperCLOVAX-SEED-Think-14B  --num_lower_tokens 20 --num_upper_tokens 20"
+inject_kullm3 = "python src/llm_reversing/inject.py --model nlpai-lab/KULLM3  --num_lower_tokens 20 --num_upper_tokens 20"
+inject_kanana_base = "python src/llm_reversing/inject.py --model kakaocorp/kanana-1.5-8b-base  --num_lower_tokens 20 --num_upper_tokens 20"
+inject_solar = "python src/llm_reversing/inject.py --model upstage/SOLAR-10.7B-v1.0  --num_lower_tokens 20 --num_upper_tokens 20"
+inject_kanana_a3b = "python src/llm_reversing/inject.py --model kakaocorp/kanana-1.5-15.7b-a3b-instruct  --num_lower_tokens 20 --num_upper_tokens 20"
+inject_kanana_safeguard_8b = "python src/llm_reversing/inject.py --model kakaocorp/kanana-safeguard-8b  --num_lower_tokens 20 --num_upper_tokens 20"
+inject_exaone_3_5_32b = "python src/llm_reversing/inject.py --model LGAI-EXAONE/EXAONE-3.5-32B-Instruct  --num_lower_tokens 20 --num_upper_tokens 20"
+inject_solar_instruct_v1_0 = "python src/llm_reversing/inject.py --model upstage/SOLAR-10.7B-Instruct-v1.0  --num_lower_tokens 20 --num_upper_tokens 20"
 
 glitch_tokens_exaone_3_0_test = "python src/llm_reversing/glitch_tokens.py --model LGAI-EXAONE/EXAONE-3.0-7.8B-Instruct  --num_low 1 --num_high 1"
 glitch_tokens_exaone_4_0_1_32b_test = "python src/llm_reversing/glitch_tokens.py --model LGAI-EXAONE/EXAONE-4.0.1-32B  --num_low 1 --num_high 1"
@@ -63,33 +63,33 @@ glitch_tokens_kullm3_test = "python src/llm_reversing/glitch_tokens.py --model n
 glitch_tokens_kanana_test = "python src/llm_reversing/glitch_tokens.py --model kakaocorp/kanana-1.5-8b-base  --num_low 1 --num_high 1"
 glitch_tokens_solar_test = "python src/llm_reversing/glitch_tokens.py --model upstage/SOLAR-10.7B-v1.0  --num_low 1 --num_high 1"
 
-inject_hyperclovax_test = "python src/llm_reversing/inject.py --model naver-hyperclovax/HyperCLOVAX-SEED-Vision-Instruct-3B  --num_tokens 1"
-inject_exaone_3_0_test = "python src/llm_reversing/inject.py --model LGAI-EXAONE/EXAONE-3.0-7.8B-Instruct  --num_tokens 1"
-inject_exaone_4_0_1_32b_test = "python src/llm_reversing/inject.py --model LGAI-EXAONE/EXAONE-4.0.1-32B  --num_tokens 1"
-inject_hyperclovax_think_test = "python src/llm_reversing/inject.py --model naver-hyperclovax/HyperCLOVAX-SEED-Think-14B  --num_tokens 1"
-inject_kullm3_test = "python src/llm_reversing/inject.py --model nlpai-lab/KULLM3  --num_tokens 1"
-inject_kanana_test = "python src/llm_reversing/inject.py --model kakaocorp/kanana-1.5-8b-base  --num_tokens 1"
-inject_solar_test = "python src/llm_reversing/inject.py --model upstage/SOLAR-10.7B-v1.0  --num_tokens 1"
+inject_hyperclovax_test = "python src/llm_reversing/inject.py --model naver-hyperclovax/HyperCLOVAX-SEED-Vision-Instruct-3B  --num_lower_tokens 1 --num_upper_tokens 1"
+inject_exaone_3_0_test = "python src/llm_reversing/inject.py --model LGAI-EXAONE/EXAONE-3.0-7.8B-Instruct  --num_lower_tokens 1 --num_upper_tokens 1"
+inject_exaone_4_0_1_32b_test = "python src/llm_reversing/inject.py --model LGAI-EXAONE/EXAONE-4.0.1-32B  --num_lower_tokens 1 --num_upper_tokens 1"
+inject_hyperclovax_think_test = "python src/llm_reversing/inject.py --model naver-hyperclovax/HyperCLOVAX-SEED-Think-14B  --num_lower_tokens 1 --num_upper_tokens 1"
+inject_kullm3_test = "python src/llm_reversing/inject.py --model nlpai-lab/KULLM3  --num_lower_tokens 1 --num_upper_tokens 1"
+inject_kanana_test = "python src/llm_reversing/inject.py --model kakaocorp/kanana-1.5-8b-base  --num_lower_tokens 1 --num_upper_tokens 1"
+inject_solar_test = "python src/llm_reversing/inject.py --model upstage/SOLAR-10.7B-v1.0  --num_lower_tokens 1 --num_upper_tokens 1"
 
 # # OFF
 # extract_kogpt = "python src/llm_reversing/extract.py --model kakaobrain/kogpt --output_dir results --low_threshold 3.0 --high_threshold 1.0"
 # glitch_tokens_kogpt = "python src/llm_reversing/glitch_tokens.py --model kakaobrain/kogpt  --num_low 300 --num_high 300"
-# inject_kogpt = "python src/llm_reversing/inject.py --model kakaobrain/kogpt  --num_tokens 300"
+# inject_kogpt = "python src/llm_reversing/inject.py --model kakaobrain/kogpt  --num_lower_tokens 300 --num_upper_tokens 300"
 
 # # OFF
 # extract_solar_pro_preview = "python src/llm_reversing/extract.py --model upstage/solar-pro-preview-pretrained --output_dir results --low_threshold 3.0 --high_threshold 1.0"
 # glitch_tokens_solar_pro_preview = "python src/llm_reversing/glitch_tokens.py --model upstage/solar-pro-preview-pretrained  --num_low 300 --num_high 300"
-# inject_solar_pro_preview = "python src/llm_reversing/inject.py --model upstage/solar-pro-preview-pretrained  --num_tokens 300"
+# inject_solar_pro_preview = "python src/llm_reversing/inject.py --model upstage/solar-pro-preview-pretrained  --num_lower_tokens 300 --num_upper_tokens 300"
 
 # # OFF
 # extract_thunder_llm_8b = "python src/llm_reversing/extract.py --model thunder-research-group/Llama-Thunder-LLM-8B --output_dir results --low_threshold 3.0 --high_threshold 1.0"
 # glitch_tokens_thunder_llm_8b = "python src/llm_reversing/glitch_tokens.py --model thunder-research-group/Llama-Thunder-LLM-8B  --num_low 300 --num_high 300"
-# inject_thunder_llm_8b = "python src/llm_reversing/inject.py --model thunder-research-group/Llama-Thunder-LLM-8B  --num_tokens 300"
+# inject_thunder_llm_8b = "python src/llm_reversing/inject.py --model thunder-research-group/Llama-Thunder-LLM-8B  --num_lower_tokens 300 --num_upper_tokens 300"
 
 # # OFF
 # extract_korani_v3_13b = "python src/llm_reversing/extract.py --model KRAFTON/KORani-v3-13B --output_dir results --low_threshold 3.0 --high_threshold 1.0"
 # glitch_tokens_korani_v3_13b = "python src/llm_reversing/glitch_tokens.py --model KRAFTON/KORani-v3-13B  --num_low 300 --num_high 300"
-# inject_korani_v3_13b = "python src/llm_reversing/inject.py --model KRAFTON/KORani-v3-13B  --num_tokens 300"
+# inject_korani_v3_13b = "python src/llm_reversing/inject.py --model KRAFTON/KORani-v3-13B  --num_lower_tokens 300 --num_upper_tokens 300"
 
 
 [tool.pixi.system-requirements]

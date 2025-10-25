@@ -71,13 +71,8 @@ Safety classifiers rely on the final embedding pattern of the prompt. The glitch
 
 # Examples
 
-see [poc.ipynb](poc.ipynb) tested in 
+[poc.ipynb](poc.ipynb) 
 
-- `LGAI-EXAONE_EXAONE-3.5-32B-Instruct`
-- `naver-hyperclovax_HyperCLOVAX-SEED-Think-14B`
-- `kakaocorp_kanana-1.5-15.7b-a3b-instruct`
-- `kakaocorp_kanana-safeguard-8b` 
-- `upstage_SOLAR-10.7B-Instruct-v1.0`
 
 # How to prevent
 
