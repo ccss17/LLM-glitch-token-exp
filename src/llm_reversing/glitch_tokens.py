@@ -1,44 +1,3 @@
-#!/usr/bin/env python3
-"""
-Glitch Token Behavior Tester - OPTIMIZED FOR SPEED
-Test anomalous tokens by inputting them into the model and observing behavior
-
-EXTREME PERFORMANCE OPTIMIZATIONS:
-================================================================================
-- vLLM engine (10-20x faster than HuggingFace)
-- Flash Attention 2 (automatic)
-- Continuous batching (zero GPU idle time)
-- PagedAttention (efficient memory management)
-- BFloat16 precision
-- LIMITED context window (2048 tokens - 10x faster prefill)
-- LIMITED generation length (200 tokens - prevents infinite loops)
-- Early stopping (prevent runaway generation)
-
-FIXES:
-================================================================================
-Problem 1: max_model_len=None -> Fixed to 2048 (massive speedup)
-Problem 2: No batching info -> Already using continuous batching (vLLM magic)
-Problem 3: max_tokens=None -> Fixed to 200 (prevent infinite generation)
-
-Usage:
-    # Basic usage - test 10 low + 10 high norm tokens (FAST!)
-    python glitch_tokens.py
-
-    # Large batch - 100 tokens in ~5-10 minutes on 32B model
-    python glitch_tokens.py --num_low 100 --num_high 50
-
-    # MASSIVE test - 500 tokens in ~20-30 minutes
-    python glitch_tokens.py --num_low 300 --num_high 200
-
-    # For 7B model, you can go even faster
-    python glitch_tokens.py --num_low 500 --num_high 300
-
-Requirements:
-    - NVIDIA H200/H100/A100 GPU
-    - Must run extract.py first to generate analysis_results.json
-    - pip install vllm
-"""
-
 import json
 from pathlib import Path
 from typing import List, Dict, Tuple
@@ -46,7 +5,6 @@ from dataclasses import dataclass, asdict
 import time
 from collections import Counter
 
-import fire
 import numpy as np
 from vllm import LLM, SamplingParams
 
@@ -62,7 +20,6 @@ class TokenTestResult:
     prompt: str
     response: str
     response_length: int
-    generation_time: float
     abnormal_behavior: List[str]
     repetition_rate: float
     language_switches: int
@@ -73,48 +30,26 @@ class TokenTestResult:
 
 
 class GlitchTokenTester:
-    """Glitch Token behavior test class using vLLM"""
-
     def __init__(
         self,
         model_name: str,
         results_path: str = "results",
         tensor_parallel_size: int = 1,
-        gpu_memory_utilization: float = 0.9,  # Reduced from 0.95 for safety
-        max_model_len: int = 2048,  # FIX 1: Limit context length
-        max_tokens: int = 200,  # FIX 3: Limit generation length
+        gpu_memory_utilization: float = 0.9, 
+        max_model_len: int = 2048,  
+        max_tokens: int = 200,  
     ):
-        """
-        Args:
-            model_name: HuggingFace model name
-            results_path: Path containing analysis_results.json
-            tensor_parallel_size: Number of GPUs (1 for single H200)
-            gpu_memory_utilization: GPU memory usage (0.9 = 90%)
-            max_model_len: Max context length (2048 = 10x faster than 32K)
-            max_tokens: Max generation length (200 = prevent runaway)
-        """
         self.model_name = model_name
         self.max_model_len = max_model_len
         self.max_tokens = max_tokens
 
-        # Setup paths
         safe_model_name = model_name.replace("/", "_")
         self.results_path = Path(results_path) / safe_model_name
         self.output_dir = self.results_path / "attacked"
         self.output_dir.mkdir(parents=True, exist_ok=True)
 
-        print("=" * 80)
-        print("INITIALIZING GLITCH TOKEN TESTER (OPTIMIZED)")
-        print("=" * 80)
-        print(f"Model: {model_name}")
-        print(f"Output: {self.output_dir}")
-        print(f"GPU Memory: {gpu_memory_utilization * 100:.0f}%")
-        print(f"Max Context: {max_model_len} tokens (SPEED OPTIMIZED)")
-        print(f"Max Generation: {max_tokens} tokens (PREVENTS INFINITE LOOPS)")
-
         # Load anomaly data
         anomalies_path = self.results_path / "analysis_results.json"
-        print(f"\nLoading anomaly data from {anomalies_path}...")
         with open(anomalies_path, "r", encoding="utf-8") as f:
             self.anomaly_data = json.load(f)
 
@@ -123,83 +58,43 @@ class GlitchTokenTester:
         print(f"   Low norm tokens: {low_count}")
         print(f"   High norm tokens: {high_count}")
 
-        # vLLM model and sampling params
         self.llm = None
         self.sampling_params = None
         self.tensor_parallel_size = tensor_parallel_size
         self.gpu_memory_utilization = gpu_memory_utilization
 
     def load_model(self):
-        """Load model using vLLM - MUCH faster than HuggingFace"""
-        print("\n" + "=" * 80)
-        print("LOADING MODEL WITH vLLM ENGINE (OPTIMIZED)")
-        print("=" * 80)
-
-        start_time = time.time()
-
         self.llm = LLM(
             model=self.model_name,
             tensor_parallel_size=self.tensor_parallel_size,
             gpu_memory_utilization=self.gpu_memory_utilization,
             trust_remote_code=True,
-            dtype="bfloat16",  # H200 optimized
-            max_model_len=self.max_model_len,  # FIXED: Was None, now 2048
-            enforce_eager=False,  # Use CUDA graphs for speed
-            # Additional optimizations
-            enable_prefix_caching=True,  # Cache repeated prompts
-            disable_log_stats=True,  # Reduce logging overhead
+            dtype="bfloat16",  
+            max_model_len=self.max_model_len,
+            enforce_eager=False,  
+            enable_prefix_caching=True,  
+            disable_log_stats=True,  
         )
-
-        load_time = time.time() - start_time
-        print(f"Model loaded in {load_time:.2f}s")
 
         self.sampling_params = SamplingParams(
             temperature=0.0,  # Greedy decoding (fastest)
-            max_tokens=self.max_tokens,  # FIXED: Was None, now 200
+            max_tokens=self.max_tokens,  
             top_p=1.0,
             skip_special_tokens=True,
-            # Add early stopping conditions
-            stop=["\n\n", "###", "</s>", "<|endoftext|>"],
         )
 
-        print("\nOptimizations enabled:")
-        print(f"   Temperature: {self.sampling_params.temperature} (greedy)")
-        print(f"   Max tokens: {self.sampling_params.max_tokens} (prevents runaway)")
-        print(f"   Max context: {self.max_model_len} (10x faster prefill)")
-        print("   Flash Attention 2: (automatic)")
-        print("   PagedAttention: (automatic)")
-        print("   Continuous Batching: (automatic)")
-        print("   Prefix Caching: (enabled)")
-        print("   Early Stopping: (enabled)")
-
-    def _generate_batch_vllm(
-        self, prompts: List[str]
-    ) -> Tuple[List[str], float]:
+    def _generate_batch_vllm(self, prompts: List[str]):
+        """Generate responses for multiple prompts
         """
-        Generate responses for multiple prompts using vLLM
-        
-        FIX 2: This already uses continuous batching internally!
-        vLLM automatically batches all prompts and processes them efficiently.
-        No manual batching needed - that's the magic of vLLM!
-        """
-        start_time = time.time()
-
-        # vLLM handles batching internally with continuous batching
-        # This is already optimized - no changes needed!
         outputs = self.llm.generate(prompts, self.sampling_params)
-
-        gen_time = time.time() - start_time
-
-        # Extract generated text
         responses = [output.outputs[0].text for output in outputs]
-
-        return responses, gen_time
+        return responses
 
     def _create_test_prompts(
         self,
         tokens: List[Dict],
         test_type: str,
-    ) -> List[Tuple[Dict, str]]:
+    ):
         """Create test prompts for a batch of tokens"""
         prompt_pairs = []
 
@@ -226,40 +121,37 @@ class GlitchTokenTester:
         """Detect abnormal behavior"""
         abnormal = []
 
-        # 1. Excessive repetition
+        # Excessive repetition
         if response.count(token_str) > 10:
             abnormal.append("excessive_repetition")
 
-        # 2. Very long output (now won't happen due to max_tokens=200)
+        # Very long output (now won't happen due to max_tokens=200)
         if len(response) > 1000:
             abnormal.append("excessive_length")
 
-        # 3. Empty output
+        # Empty output
         if len(response.strip()) < 5:
             abnormal.append("empty_output")
 
-        # 4. Only special characters repeated
+        # Only special characters repeated
         if len(set(response.strip())) < 3 and len(response) > 20:
             abnormal.append("character_repetition")
 
-        # 5. URL hallucination
+        # URL hallucination
         if any(x in response for x in ["http://", "https://", "github.com"]):
             abnormal.append("url_hallucination")
 
-        # 6. Number/date hallucination
+        # Number/date hallucination
         if "#" in response and any(char.isdigit() for char in response):
             abnormal.append("number_hallucination")
 
-        # 7. Hit max tokens (truncated)
+        # Hit max tokens (truncated)
         if len(response) >= self.max_tokens * 4:  # Rough estimate
             abnormal.append("truncated_at_max_tokens")
 
         return abnormal if abnormal else ["normal"]
 
-    def _calculate_repetition_rate(
-        self, response: str, token_str: str
-    ) -> float:
-        """Calculate token repetition rate"""
+    def _calculate_repetition_rate(self, response: str, token_str: str):
         if not response or not token_str:
             return 0.0
 
@@ -272,7 +164,6 @@ class GlitchTokenTester:
         return count * len(token_str) / total_length
 
     def _detect_language_switches(self, response: str) -> int:
-        """Estimate language switch count"""
         if not response:
             return 0
 
@@ -307,12 +198,6 @@ class GlitchTokenTester:
         max_tokens_to_test: int = None,
         norm_category: str = "unknown",
     ) -> List[TokenTestResult]:
-        """
-        Test tokens in MASSIVE batches - the vLLM way!
-        
-        FIX 2: Already optimized - vLLM handles continuous batching internally.
-        All prompts are processed in parallel with zero GPU idle time.
-        """
         results = []
 
         # Limit number of tokens if specified
@@ -346,12 +231,7 @@ class GlitchTokenTester:
             print(
                 f"   Generating {len(prompts)} responses in parallel (vLLM continuous batching)..."
             )
-            responses, gen_time = self._generate_batch_vllm(prompts)
-
-            tokens_per_sec = len(prompts) / gen_time
-            print(
-                f"   Generated in {gen_time:.2f}s ({tokens_per_sec:.1f} prompts/sec)"
-            )
+            responses = self._generate_batch_vllm(prompts)
 
             # Debug: Show response lengths
             response_lengths = [len(r) for r in responses]
@@ -389,7 +269,6 @@ class GlitchTokenTester:
                     prompt=prompt,
                     response=response,
                     response_length=len(response),
-                    generation_time=gen_time / len(prompts),
                     abnormal_behavior=abnormal,
                     repetition_rate=repetition_rate,
                     language_switches=language_switches,
@@ -406,9 +285,7 @@ class GlitchTokenTester:
         test_types: List[str] = ["repeat", "context", "meaning", "normal"],
     ):
         """Run comprehensive test"""
-        print("\n" + "=" * 80)
-        print("COMPREHENSIVE GLITCH TOKEN TEST (OPTIMIZED)")
-        print("=" * 80)
+        print(f"\n{'=' * 80}\nCOMPREHENSIVE GLITCH TOKEN TEST (OPTIMIZED)\n{'=' * 80}")
 
         overall_start = time.time()
 
@@ -419,9 +296,7 @@ class GlitchTokenTester:
         all_results = []
 
         # Test low norm tokens
-        print("\n" + "=" * 80)
-        print("TESTING LOW NORM TOKENS")
-        print("=" * 80)
+        print(f"\n{'=' * 80}\nTESTING LOW NORM TOKENS\n{'=' * 80}")
         low_tokens = self.anomaly_data["anomalies"]["low_norm_tokens"]
         low_results = self.test_tokens_massive_batch(
             low_tokens,
@@ -432,9 +307,7 @@ class GlitchTokenTester:
         all_results.extend(low_results)
 
         # Test high norm tokens
-        print("\n" + "=" * 80)
-        print("TESTING HIGH NORM TOKENS")
-        print("=" * 80)
+        print(f"\n{'=' * 80}\nTESTING HIGH NORM TOKENS\n{'=' * 80}")
         high_tokens = self.anomaly_data["anomalies"]["high_norm_tokens"]
         high_results = self.test_tokens_massive_batch(
             high_tokens,
@@ -446,14 +319,12 @@ class GlitchTokenTester:
 
         overall_time = time.time() - overall_start
 
-        print("\n" + "=" * 80)
-        print("PERFORMANCE SUMMARY")
-        print("=" * 80)
+        print(f"\n{'=' * 80}\nPERFORMANCE SUMMARY\n{'=' * 80}")
         print(f"TOTAL TIME: {overall_time:.2f}s ({overall_time / 60:.1f} min)")
         print(f"TOTAL TESTS: {len(all_results)}")
         print(f"AVERAGE: {overall_time / len(all_results):.3f}s per test")
         print(f"THROUGHPUT: {len(all_results) / overall_time:.1f} tests/sec")
-        print("=" * 80)
+        print(f"{'=' * 80}")
 
         # Save results
         self._save_results(all_results)
@@ -482,9 +353,7 @@ class GlitchTokenTester:
         report_path = self.output_dir / "GLITCH_TOKENS_BEHAVIOR.txt"
 
         with open(report_path, "w", encoding="utf-8") as f:
-            f.write("=" * 80 + "\n")
-            f.write("GLITCH TOKEN BEHAVIOR TEST REPORT (OPTIMIZED)\n")
-            f.write("=" * 80 + "\n\n")
+            f.write(f"{'=' * 80}\nGLITCH TOKEN BEHAVIOR TEST REPORT (OPTIMIZED)\n{'=' * 80}\n\n")
 
             f.write(f"Model: {self.model_name}\n")
             f.write(f"Total tests: {len(results)}\n")
@@ -493,9 +362,7 @@ class GlitchTokenTester:
             f.write(f"Max Generation Length: {self.max_tokens}\n\n")
 
             # Abnormal behavior statistics
-            f.write("-" * 80 + "\n")
-            f.write("ABNORMAL BEHAVIOR STATISTICS\n")
-            f.write("-" * 80 + "\n")
+            f.write(f"{'-' * 80}\nABNORMAL BEHAVIOR STATISTICS\n{'-' * 80}\n")
 
             all_abnormal = []
             for r in results:
@@ -508,16 +375,12 @@ class GlitchTokenTester:
                     f"  {behavior:>30s}: {count:>4d} ({percentage:>5.1f}%)\n"
                 )
 
-            f.write("\n" + "=" * 80 + "\n")
-            f.write("INDIVIDUAL TEST RESULTS\n")
-            f.write("=" * 80 + "\n\n")
+            f.write(f"\n{'=' * 80}\nINDIVIDUAL TEST RESULTS\n{'=' * 80}\n\n")
 
             for i, result in enumerate(results, 1):
                 token_type = result.norm_category.capitalize()
 
-                f.write(f"\n{'=' * 80}\n")
-                f.write(f"{token_type} Test #{i}\n")
-                f.write(f"{'=' * 80}\n")
+                f.write(f"\n{'=' * 80}\n{token_type} Test #{i}\n{'=' * 80}\n")
                 f.write(f"Token ID: {result.token_id}\n")
                 f.write(f"Token: {result.token_str!r}\n")
                 f.write(f"Norm: {result.norm:.4f}\n")
@@ -539,9 +402,7 @@ class GlitchTokenTester:
                 )
 
             # Summary section
-            f.write("\n" + "=" * 80 + "\n")
-            f.write("TEST SUMMARY\n")
-            f.write("=" * 80 + "\n\n")
+            f.write(f"\n{'=' * 80}\nTEST SUMMARY\n{'=' * 80}\n\n")
 
             total = len(results)
             abnormal_count = sum(
@@ -565,9 +426,7 @@ class GlitchTokenTester:
             f.write(f"Average generation time: {avg_time:.4f}s per test\n")
 
             # Top 5 most abnormal
-            f.write("\n" + "-" * 80 + "\n")
-            f.write("TOP 5 MOST ABNORMAL TOKENS\n")
-            f.write("-" * 80 + "\n\n")
+            f.write(f"\n{'-' * 80}\nTOP 5 MOST ABNORMAL TOKENS\n{'-' * 80}\n\n")
 
             sorted_results = sorted(
                 results,
@@ -597,9 +456,7 @@ class GlitchTokenTester:
 
     def _print_summary(self, results: List[TokenTestResult]):
         """Print result summary"""
-        print("\n" + "=" * 80)
-        print("TEST SUMMARY")
-        print("=" * 80)
+        print(f"\n{'=' * 80}\nTEST SUMMARY\n{'=' * 80}")
 
         total = len(results)
         abnormal_count = sum(
@@ -623,9 +480,7 @@ class GlitchTokenTester:
         print(f"Average generation time: {avg_time:.4f}s per test")
 
         # Top 5 most abnormal
-        print("\n" + "-" * 80)
-        print("TOP 5 MOST ABNORMAL TOKENS")
-        print("-" * 80)
+        print(f"\n{'-' * 80}\nTOP 5 MOST ABNORMAL TOKENS\n{'-' * 80}")
 
         sorted_results = sorted(
             results,
@@ -683,13 +538,11 @@ def main(
         # If hitting OOM, reduce context or memory
         python glitch_tokens.py --max_context 1024 --gpu_memory 0.8
     """
-    print("\n" + "=" * 80)
-    print("GLITCH TOKEN TESTER (OPTIMIZED)")
-    print("=" * 80)
+    print(f"\n{'=' * 80}\nGLITCH TOKEN TESTER (OPTIMIZED)\n{'=' * 80}")
     print(f"Max Context: {max_context} tokens")
     print(f"Max Generation: {max_gen} tokens")
     print(f"Expected speedup: ~10x faster than unlimited")
-    print("=" * 80 + "\n")
+    print(f"{'=' * 80}\n")
 
     tester = GlitchTokenTester(
         model_name=model,
@@ -706,10 +559,12 @@ def main(
         test_types=["repeat", "context", "meaning", "normal"],
     )
 
-    print("\n" + "=" * 80)
-    print("ALL TESTS COMPLETE!")
-    print("=" * 80 + "\n")
+    print(f"\n{'=' * 80}\nALL TESTS COMPLETE!\n{'=' * 80}\n")
 
 
 if __name__ == "__main__":
+    """
+    python glitch_tokens.py --num_low 100 --num_high 50
+    """
+    import fire
     fire.Fire(main)

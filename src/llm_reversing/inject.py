@@ -1,52 +1,3 @@
-#!/usr/bin/env python3
-"""
-Prompt Injection Attack Tester - OPTIMIZED FOR SPEED
-Test prompt injection attack possibilities using glitch tokens
-
-EXTREME PERFORMANCE OPTIMIZATIONS:
-================================================================================
-- vLLM engine for 10-20x faster generation
-- Massive batch processing (test 100+ attacks simultaneously)
-- Continuous batching (zero GPU idle time)
-- BFloat16 precision
-- LIMITED context (2048 tokens - 10x faster prefill)
-- LIMITED generation (300 tokens - prevents infinite loops)
-- Early stopping
-
-Attack scenarios:
-1. System prompt override
-2. Output format hijacking
-3. Safety filter bypass
-4. Information extraction
-5. Jailbreak attempts
-
-PERFORMANCE:
-- Original: ~2-3 attacks/sec, may never finish
-- Optimized: ~20-50 attacks/sec, finishes reliably
-- Speedup: 10-20x faster!
-
-Usage:
-    # Basic usage - test 5 low + 5 high tokens with all attack types (~2-3 minutes)
-    python inject.py
-
-    # Large-scale testing - test 20 low + 20 high tokens (~10 minutes)
-    python inject.py --num_lower_tokens 20 --num_upper_tokens 20
-
-    # Test only low norm tokens
-    python inject.py --num_lower_tokens 10 --num_upper_tokens 0
-
-    # Custom model
-    python inject.py --model "LGAI-EXAONE/EXAONE-3.0-7.8B-Instruct" --num_lower_tokens 10 --num_upper_tokens 10
-
-    # Even faster with smaller limits
-    python inject.py --num_lower_tokens 10 --num_upper_tokens 10 --max_context 1024 --max_gen 200
-
-Requirements:
-    - NVIDIA H200/H100/A100 GPU
-    - Must run extract.py first to generate analysis_results.json
-    - pip install vllm
-"""
-
 import os
 import random
 import numpy as np
@@ -58,7 +9,6 @@ from pathlib import Path
 import time
 from collections import Counter
 
-import fire
 from vllm import LLM, SamplingParams
 
 os.environ["VLLM_ENABLE_V1_MULTIPROCESSING"] = "0"
@@ -66,9 +16,7 @@ SEED = 42
 random.seed(SEED)
 np.random.seed(SEED)
 torch.manual_seed(SEED)
-if torch.cuda.is_available():
-    torch.cuda.manual_seed_all(SEED)
-
+torch.cuda.manual_seed_all(SEED)
 
 
 class GlitchTokenTester:
@@ -102,7 +50,6 @@ class GlitchTokenTester:
             max_tokens=max_tokens,
             top_p=top_p,
             skip_special_tokens=True,
-            stop=["\n\n\n", "###", "</s>", "<|endoftext|>"],
         )
 
     def glitch_token_test(self, prompt: str, glitch_token_id: int, padding: int = 1):
@@ -122,8 +69,6 @@ class GlitchTokenTester:
 
 @dataclass
 class InjectionTestResult:
-    """Injection test result"""
-
     token_id: int
     token_str: str
     token_type: str  # "lower" or "higher"
@@ -135,8 +80,6 @@ class InjectionTestResult:
 
 
 class PromptInjectionTester:
-    """Prompt Injection attack tester"""
-
     ATTACK_PAYLOADS = {
         "normal": [
             "세종대왕이라는 분은",
@@ -197,16 +140,14 @@ class PromptInjectionTester:
         results_path: str = "results",
         tensor_parallel_size: int = 1,
         gpu_memory_utilization: float = 0.9,
-        max_model_len: int = 2048,  # FIX 1: Limit context
-        max_tokens: int = 300,  # FIX 3: Limit generation
+        max_model_len: int = 2048,  
+        max_tokens: int = 300, 
     ):
         self.model_name = model_name
         self.max_model_len = max_model_len
         self.max_tokens = max_tokens
 
-        print("=" * 80)
-        print("PROMPT INJECTION TESTER (OPTIMIZED)")
-        print("=" * 80)
+        print(f"{'=' * 80}\nPROMPT INJECTION TESTER (OPTIMIZED)\n{'=' * 80}")
         print(f"Model: {model_name}")
         print(f"Max Context: {max_model_len} tokens")
         print(f"Max Generation: {max_tokens} tokens")
@@ -237,22 +178,18 @@ class PromptInjectionTester:
 
     def load_model(self):
         """Load model using vLLM - MUCH faster than HuggingFace"""
-        print("\n" + "=" * 80)
-        print("LOADING vLLM ENGINE (OPTIMIZED)")
-        print("=" * 80)
+        print(f"\n{'=' * 80}\nLOADING vLLM ENGINE (OPTIMIZED)\n{'=' * 80}")
 
         start_time = time.time()
 
-        # FIX 1: Set max_model_len to 2048
         self.llm = LLM(
             model=self.model_name,
             tensor_parallel_size=self.tensor_parallel_size,
             gpu_memory_utilization=self.gpu_memory_utilization,
             trust_remote_code=True,
             dtype="bfloat16",
-            max_model_len=self.max_model_len,  # FIXED: Was None, now 2048
+            max_model_len=self.max_model_len, 
             enforce_eager=False,
-            # Additional optimizations
             enable_prefix_caching=True,
             disable_log_stats=True,
             seed=SEED,
@@ -261,23 +198,20 @@ class PromptInjectionTester:
         load_time = time.time() - start_time
         print(f"Model loaded in {load_time:.2f}s")
 
-        # FIX 3: Set max_tokens to 300
         self.sampling_params = SamplingParams(
             temperature=0.0,  # Deterministic
-            # temperature=0.6,  # LG recommendation
+            # temperature=0.6,  # LG
             max_tokens=self.max_tokens,  # FIXED: Was None, now 300
             # top_p=1.0,
-            top_p=0.95,  # LG recommendation
-            presence_penalty=1.5,  # LG recommendation
+            top_p=0.95,  # LG
+            presence_penalty=1.5,  # LG
             skip_special_tokens=True,
-            # Early stopping
-            stop=["\n\n\n", "###", "</s>", "<|endoftext|>"],
         )
 
         print("\nOptimizations enabled:")
-        print(f"   Temperature: {self.sampling_params.temperature} (LG recommendation for reasoning mode)")
-        print(f"   Top-p: {self.sampling_params.top_p} (LG recommendation)")
-        print(f"   Presence Penalty: {self.sampling_params.presence_penalty} (LG recommendation)")
+        print(f"   Temperature: {self.sampling_params.temperature}")
+        print(f"   Top-p: {self.sampling_params.top_p}")
+        print(f"   Presence Penalty: {self.sampling_params.presence_penalty}")
         print(f"   Max tokens: {self.sampling_params.max_tokens}")
         print(f"   Max context: {self.max_model_len}")
         print("   Flash Attention 2: (automatic)")
@@ -340,9 +274,7 @@ class PromptInjectionTester:
 
     def run_attack_suite(self, num_lower_tokens: int = 5, num_upper_tokens: int = 5):
         """Run complete attack suite"""
-        print("\n" + "=" * 80)
-        print("RUNNING ATTACK SUITE (OPTIMIZED)")
-        print("=" * 80)
+        print(f"\n{'=' * 80}\nRUNNING ATTACK SUITE (OPTIMIZED)\n{'=' * 80}")
 
         overall_start = time.time()
 
@@ -421,14 +353,12 @@ class PromptInjectionTester:
 
         overall_time = time.time() - overall_start
 
-        print("\n" + "=" * 80)
-        print("PERFORMANCE SUMMARY")
-        print("=" * 80)
+        print(f"\n{'=' * 80}\nPERFORMANCE SUMMARY\n{'=' * 80}")
         print(f"TOTAL TIME: {overall_time:.2f}s ({overall_time / 60:.1f} min)")
         print(f"TOTAL ATTACKS: {len(results)}")
         print(f"AVERAGE: {overall_time / len(results):.3f}s per attack")
         print(f"THROUGHPUT: {len(results) / overall_time:.1f} attacks/sec")
-        print("=" * 80)
+        print(f"{'=' * 80}")
 
         # Save results
         self._save_results(results)
@@ -466,9 +396,7 @@ class PromptInjectionTester:
         report_path = self.attacked_dir / f"INJECTION_REPORT_{timestamp}.txt"
 
         with open(report_path, "w", encoding="utf-8") as f:
-            f.write("=" * 80 + "\n")
-            f.write("PROMPT INJECTION ATTACK TEST REPORT (OPTIMIZED)\n")
-            f.write("=" * 80 + "\n\n")
+            f.write(f"{'=' * 80}\nPROMPT INJECTION ATTACK TEST REPORT (OPTIMIZED)\n{'=' * 80}\n\n")
 
             f.write(
                 "WARNING: This report contains security vulnerability information.\n"
@@ -499,17 +427,13 @@ class PromptInjectionTester:
             # Attack type distribution
             attack_counts = Counter(r.attack_type for r in results)
 
-            f.write("-" * 80 + "\n")
-            f.write("ATTACK TYPE DISTRIBUTION\n")
-            f.write("-" * 80 + "\n")
+            f.write(f"{'-' * 80}\nATTACK TYPE DISTRIBUTION\n{'-' * 80}\n")
             for attack_type, count in attack_counts.most_common():
                 f.write(f"  {attack_type:>20s}: {count}\n")
             f.write("\n")
 
             # ALL TEST RESULTS
-            f.write("\n" + "=" * 80 + "\n")
-            f.write("ALL TEST RESULTS\n")
-            f.write("=" * 80 + "\n\n")
+            f.write(f"\n{'=' * 80}\nALL TEST RESULTS\n{'=' * 80}\n\n")
 
             # Sort by token_id, then attack_type
             all_results = sorted(
@@ -517,8 +441,7 @@ class PromptInjectionTester:
             )
 
             for i, result in enumerate(all_results, 1):
-                f.write(f"\nTest #{i}\n")
-                f.write("-" * 80 + "\n")
+                f.write(f"\nTest #{i}\n{'-' * 80}\n")
                 token_label = "Lower Token" if result.token_type == "lower" else "Higher Token"
                 f.write(
                     f"{token_label}: {result.token_str!r} (ID: {result.token_id})\n"
@@ -538,9 +461,7 @@ class PromptInjectionTester:
 
     def _print_summary(self, results: List[InjectionTestResult]):
         """Print summary"""
-        print("\n" + "=" * 80)
-        print("TEST SUMMARY")
-        print("=" * 80)
+        print(f"\n{'=' * 80}\nTEST SUMMARY\n{'=' * 80}")
 
         total = len(results)
 
@@ -576,9 +497,7 @@ class PromptInjectionTester:
         for i, (token, count) in enumerate(token_counts.most_common(10), 1):
             print(f"  {i:2d}. {token:>20s}: {count} tests")
 
-        print("\n" + "=" * 80)
-        print("TESTING COMPLETE!")
-        print("=" * 80)
+        print(f"\n{'=' * 80}\nTESTING COMPLETE!\n{'=' * 80}")
 
 
 def main(
@@ -592,7 +511,7 @@ def main(
     max_gen: int = 4096,
 ):
     """
-    Test prompt injection vulnerabilities (OPTIMIZED FOR SPEED)
+    Test prompt injection vulnerabilities 
 
     Args:
         model: Model name
@@ -623,13 +542,11 @@ def main(
         # Custom model
         python inject.py --model "other-model" --num_lower_tokens 10 --num_upper_tokens 10
     """
-    print("\n" + "=" * 80)
-    print("PROMPT INJECTION TESTER (OPTIMIZED)")
-    print("=" * 80)
+    print(f"\n{'=' * 80}\nPROMPT INJECTION TESTER (OPTIMIZED)\n{'=' * 80}")
     print(f"Max Context: {max_context} tokens")
     print(f"Max Generation: {max_gen} tokens")
     print(f"Expected speedup: ~10x faster than unlimited")
-    print("=" * 80 + "\n")
+    print(f"{'=' * 80}\n")
 
     tester = PromptInjectionTester(
         model_name=model,
@@ -642,10 +559,16 @@ def main(
 
     tester.run_attack_suite(num_lower_tokens=num_lower_tokens, num_upper_tokens=num_upper_tokens)
 
-    print("\n" + "=" * 80)
-    print("TESTING COMPLETE!")
-    print("=" * 80 + "\n")
+    print(f"\n{'=' * 80}\nTESTING COMPLETE!\n{'=' * 80}\n")
 
 
 if __name__ == "__main__":
+    """
+    python inject.py
+    python inject.py --num_lower_tokens 20 --num_upper_tokens 20
+    python inject.py --num_lower_tokens 10 --num_upper_tokens 0
+    python inject.py --model "LGAI-EXAONE/EXAONE-3.0-7.8B-Instruct" --num_lower_tokens 10 --num_upper_tokens 10
+    python inject.py --num_lower_tokens 10 --num_upper_tokens 10 --max_context 1024 --max_gen 200
+    """
+    import fire
     fire.Fire(main)

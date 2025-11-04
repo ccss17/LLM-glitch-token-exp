@@ -1,14 +1,3 @@
-#!/usr/bin/env python3
-"""
-Normalize and deduplicate glitch token injection test results
-
-Features:
-1. Deduplication by token_id + attack_type
-2. Response pattern detection (repetition, underscore flood, etc.)
-3. Statistical analysis
-4. Categorization by abnormal behavior
-"""
-
 import json
 import re
 from pathlib import Path
@@ -38,8 +27,6 @@ class NormalizedResult:
 
 
 class ResultNormalizer:
-    """Normalize and analyze injection test results"""
-    
     def __init__(self, clean_responses: bool = True):
         self.results: List[Dict] = []
         self.normalized: List[NormalizedResult] = []
